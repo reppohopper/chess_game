@@ -214,8 +214,8 @@ const Graphics = PIXI.Graphics;
 
 // Chessboard Layer
 const tile_size = 32;
-const light_tile_color = 0xe3ffde; // nice beige: 0xfff4d6; // 0xb5b5b5
-const dark_tile_color = 0x1dc400;// 0x007013; // the blue I had. 0x5fcde4; // green 0x038a1a
+const light_tile_color = 0xffffff; // nice beige: 0xfff4d6; // 0xb5b5b5
+const dark_tile_color = 0x5fcde4;// 0x007013; // the blue I had. 0x5fcde4; // green 0x038a1a
 
 const move_dots = {};
 const attack_circles = {}; 
