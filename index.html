@@ -20,7 +20,27 @@
 
 </head>
 <body>
+    <!-- The following is important for building the part of the socket that 
+    can send messages to the server. -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    
     <script src="https://pixijs.download/v7.0.4/pixi.min.js"></script>
+
+    <!-- 
+        The entire chess engine, split into modules by closure, loaded 
+        in order. Into the same namespace. 
+    -->
+    <script src="chess_engine_mbc/debug.js"></script>
+
+    <script src="chess_engine_mbc/test_boards.js"></script>
+    <script src="chess_engine_mbc/utilities_and_reference.js"></script>
+    <script src="chess_engine_mbc/mutables_initializers.js"></script> 
+    <script src="chess_engine_mbc/blocking_functions.js"></script>    
+    <script src="chess_engine_mbc/king_threat_functions.js"></script>
+    <script src="chess_engine_mbc/movement_options_functions.js"></script>
+    <script src="chess_engine_mbc/engine_index.js"></script>
+
     <script src="./app.js"></script>
 </body>
 </html>
