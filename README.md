@@ -72,7 +72,8 @@ my_modele.print_count // --> undefined
 
 ```
 
-## JSON Message Interface Explanation
+# JSON Message Interface 
+## Explanation
 #### Reasoning: why a JSON based message interface in the first place?
 Communicating with the engine through JSON might feel a bit weighty, but has the following advantages:
 * Allows the engine to operate independently from any GUI or client connecting to it. This forces a possibly helpful structural divide, but it also has practical benefits like allowing the engine to be easily placed in a server. 
@@ -90,24 +91,37 @@ graph
 A[Your GUI or Frontend] -- submit a move--> B(The Engine)
 B --get new set of legal moves--> A
 ```
+## Request Messages to the Engine 
+
 ### Move piece request message structure
 Move a piece by sending a JSON string conforming to the following pattern:
 ```
 {
     "message_type": "peice move", 
-    "move_from": "D2",
-    "move_to": "D4"
+    "from": "D2",
+    "to": "D4"
 }
 ```
 White opens the game by advancing the queen's pawn two spaces toward the center.
- 
+
+### Promotion request message structure
+In the event of pawn promotion, the GUI / client can notify the engine of its selection with the following JSON format: 
+```
+{
+    "message_type": "piece_promotion_choice",
+    // Send one of the following values. 
+    "piece_choice": "queen" | "rook" | "knight" | "bishop"
+}
+```
+
+## Response Messages From the Engine
 ### Successful piece move response structure
 
 ##### Basic Structure
 The "moves" object features the occupied space names as keys, and arrays of move options as values. As you might guess, the keys are limited to those spaces that have pieces on them, and are further limited to those pieces that currently have move options. 
 ```
 {
-    "message_type": "next legal moveset",
+    "message_type": "next_legal_moveset",
     "moves": {
         // some pawns * 
         "A2": ["A3", "A4"],  
@@ -137,3 +151,86 @@ Piece name moves can occasionally be ambiguous. It is possible, for example, tha
 Additionally it would make little sense to force a specific piece identification scheme (like `bN_001`) onto the GUI. The interface strives for simplicity. 
 
 #### The "events" sub-object
+The events sub-object will always be present, and has the goal of saving the GUI/Client from having to make costly calculations. The events object can and often will be empty, all of the following described events are possible, and sometimes occur in combination. It is hoped that writing a handler for this part of the response object will be much simpler than writing the necessary logic directly into the GUI. 
+
+ALL EVENT TYPES REFERENCE
+``` 
+"capture"
+"promote"
+"also_move_rook"
+"en_passant_catpure"
+```
+##### Basic Capture Event
+The space of the piece to be captured, as a string. 
+```
+"events": {
+    "capture": "D4" 
+}
+```
+##### Redundant En Passant Capture Events
+In the case of en-pessant capture, a redundant "en_passant_capture" event will appear. This is in case the GUI wants to supbscribe only to this uncommon event, and handle all other capture events on its own. 
+
+```
+"events": {
+    "capture": "D4" 
+    "en_passant_capture": "D4"
+}
+```
+##### Promotion Events
+While the player promoting their pawn will have made a direct choice through the GUI, the server echoes this choice to enable broadcasting to all clients and spectators. 
+```
+"events": {
+    "promote": {
+        "space": "G7",
+        "piece": "queen"  // other options: "rook", "bishop", or "knight"
+    }
+}
+```
+##### Castling Events
+Castling events are communicated in the form of instructions for which 'to' and 'from' spaces the rook involved in the castle should use. If subscribed here, the GUI / client doesn't have to account for whether any particular king move was a castling move. 
+```
+"events": {
+    "also_move_rook": {
+        "from": "A1",
+        "to": "D1"
+    }
+}
+```
+##### Check Events
+There's lots of additional data here with the check event, in case the client wants to do anything fancy with it, like highlighting the king-checked space, or threatening-piece spaces red.
+```
+"events": {
+    "check": {
+        "in_check": "black", // string "white" or "black"
+        "threats": ["E5", "H3"] // Array of 1-2 attacking piece spaces
+        "king_space": "D7" // The checked king space
+    }
+}
+```
+
+
+### Other Message Types
+
+##### Game Termination Messages
+```
+{
+    "message_type": ""game_end",
+    "victor": "white" | "black" | "draw" // * see note 
+    "reason": 
+        "checkmate"
+        | "timeout"
+        | "timeout_insufficient_material"
+        | "resignation"
+        | "stalemate"
+        | "threefold_repetition"
+        | "fifty_move_rule"
+}
+```
+\* Options are signified here with '|' or operators, not vaild JOSN, but hopefully helpful in conveying the idea of which strings to expect, depending on the case
+
+##### Promotion Prompt Message
+```
+{
+    "message_type": "promotion_prompt"
+}
+```
