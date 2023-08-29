@@ -1,12 +1,16 @@
 # Chess Engine README
 
+## State of the project: 
+### Completed
+* A [basic GUI](https://chess-game-gules.vercel.app/) in which complete games can be played. 
+* Functional engine that correctly lists all possible legal moves for any board state
+* Also correctly handles all check states, and obscure accumulating states like [en pessant](https://en.wikipedia.org/wiki/En_passant), [threefold repetition](https://en.wikipedia.org/wiki/Threefold_repetition), and the [50-move draw rule](https://en.wikipedia.org/wiki/Fifty-move_rule)
 
-> Disclaimer: the JSON Interface portion of this README is unfinished and describes improvements that I would like to make to an upcoming version of the engine. More like a "how I should have designed it in the first place" document. 
-> 
-> Something to aspire to. The first single-client playable version is [available here](https://chess-game-gules.vercel.app/ "https://chess-game-gules.vercel.app/")
-in the meantime.
->
-> It would make sense to put the engine in its own Repo. It is currently not. 
+### Next steps
+* Move the code to a more common / standard package type like ES modules or an npm package. 
+* Improve the UI
+* Implement JSON message interface to completely separate the engine from any given UI
+
 ## Structure of the Engine
 
 #### It's the equivalent of one JavaScript File
@@ -30,49 +34,12 @@ engine_index.js
 ```
 However, as the above loading scheme suggests, the functionality is no different than it would be if all of these JavaScript files were copied into a single file. They already share a namespace. 
 
-#### Tragic Backstory
-The engine was originally written with CommonJS after extensive research into that scheme. After realizing that it is ES Modules and not CommonJS that is compatible with major browsers by default, the author rage quit the idea adopting a respected module and crawled back to dubious but familiar comforts of the modules by closure pattern.  
-
-This, at least, makes some progress toward managing the namespace. 
-
-#### Module by closure pattern
-An example of the module by closure pattern. 
-```
-const my_module = (function my_module_loader () {
-   let exports = {}; // The one object to be returned. 
-   let sth = 123; // Private, encapsulated data! 
-   let print_count = 1;
-   
-   // Some private function. 
-   const complaining_log = function (text) {
-       console.log(text);
-       console.log(`Aww, I've had to print ${print_count} things now...`);
-       print_count += 1;
-   }   
-   
-   // Some exported function with ongoing access to the 
-   // private variables and private functions. 
-   exports.print_something = function (text) { 
-       complaining_log (text); 
-   }
-   return exports; // Expose only these exports.
-}()); // invoke immediately, to evaluate to the object 'my_module'
-
-// Exported functions have ongoing access to the modules 
-// private variables and private functions. 
-my_module.print_something("hello");
-// prints --> "hello", "Aww, I've had to print 1 things now..."
-my_module.print_something("oh, sorry.");
-// prints --> "oh sorry.", "Aww, I've had to print 2 things now..."
-
-// These private variables and functions cannot otherwise be accessed. 
-my_module.complaining_log("complain for me!");  // --> Error. 
-my_modele.print_count // --> undefined
+#### A note on the orginization
+The engine was originally written with CommonJS after extensive research into that scheme, however I realized browsers would not support this so organized the code as a series of sequentially loading files. It is at least organized through the [module-by-closure pattern](https://github.com/reppohopper/js_patterns/blob/main/modules_by_closure.md), which is the way that ES modules work under the hood.  
 
 
-```
 
-# JSON Message Interface 
+# Possible Implementation: JSON Message Interface 
 ## Explanation
 #### Reasoning: why a JSON based message interface in the first place?
 Communicating with the engine through JSON might feel a bit weighty, but has the following advantages:
