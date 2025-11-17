@@ -1,26 +1,11 @@
 
- // const socket = io();
-
-
- // This is how it waits for events from the server. 
- /*
- socket.on('chat message', function(msg){
-       $('#messages').append($('<li>').text(msg));
- });
- */
-
-// Creating an instance of the PIXI application class. 
-// First by bringing it into the code, like the way you would 
-
-// import { Application, Loader } from 'pixi.js';
-
 const Application = PIXI.Application;
 // Then by creating a specific app intsance. 
 const app = new Application({
-    width: 256, // Gets overwritten immediately. 
-    height: 256, // Gets overwritten immediately. 
-    transparent: false, // Confused why this is needed. 
-    antialias: true // I don't know what this is.
+    width: 256,
+    height: 256, 
+    transparent: false,
+    antialias: true 
 });
 
 // Set properties like the background color. 
@@ -28,9 +13,6 @@ app.renderer.backgroundColor = 0x23395D;
 // Resize the app to the size of the window. 
 // app.renderer.resize(window.innerWidth, window.innerHeight);
 app.renderer.view.style.position = "absolute";
-// Curiously, all of that was not enough to get the window to resize as you
-// drag it around. Bruno had us write a function that handled this on 
-// resize. I wonder if I could find it. But, will abstain, for a minute, here. 
 
 // Appending your app to the DOM like this is critical. 
 document.body.appendChild(app.view);
@@ -45,8 +27,6 @@ const name_expansions = {
 };
 const color_expansions = { "b": "black", "w": "white" };
 
-// Build an "existential" game engine and state
-// manager module called "gui.". 
 const gui = (function gui_engine_and_state_manager_creator () {
     let exp = {};
     
@@ -115,8 +95,6 @@ const gui = (function gui_engine_and_state_manager_creator () {
         }
         highlights[r + "_" + c].visible = true;
         exp.selected_piece_possibles = engine.get_possible_moves_by_id(id);
-        // DEBUG console.log(`Selected piece ${id} should have possible moves: `);
-        // DEBUG console.log(exp.selected_piece_possibles);
         // For all the possible moves, if it is an enemy, give it a circle, 
         // and if it is an empty space, give it a little dot.
         draw_movement_possibles(exp.selected_piece_possibles);
@@ -136,15 +114,9 @@ const gui = (function gui_engine_and_state_manager_creator () {
     const contiuation_listeners = {};
     contiuation_listeners.rook_move_from_castle = function (id, r, c) {
         board[r][c] = id;
-        // Yeah this is some bullshit. 
         board[piece_sprites[id].y / 32][piece_sprites[id].x / 32] = "";
         piece_sprites[id].x = 32 * c;
         piece_sprites[id].y = 32 * r;
-        // Make sure its clicable layer element moves with it too. 
-        // socket.emit(
-        //     'piece move', 
-        //     `${id} / r: ${r}, c: ${c}`
-        // );
     };
 
     contiuation_listeners.en_passant = function (passanted_id) {
@@ -168,15 +140,14 @@ const gui = (function gui_engine_and_state_manager_creator () {
     let pieces_promoted_count = { "w": 0, "b": 0 };
     contiuation_listeners.promotion_prompt = function (pawn_id, a1_space) {
         // Certainly room for improvement here, to actually prompt the user
-        // for what they want. 
-        // TODO : add an interface to make actual choices.
+        // for what they want to castle into TODO : add an interface to make actual choices.
         const [at_r, at_c] = ur.in_r_c(a1_space);
         const prompt_answer = "q";
 
         const new_id = pawn_id[0] + prompt_answer + String(
             parseInt(3 + pieces_promoted_count[pawn_id[0]])
         );
-        // It's a security risk to have this on the client side. 
+        // It's a game integrity risk to have this on the client side. TODO: address this. 
         pieces_promoted_count[pawn_id[0]] += 1;
         // Delete the piece at that square. 
         app.stage.removeChild(piece_sprites[pawn_id]);
@@ -214,9 +185,8 @@ const Graphics = PIXI.Graphics;
 
 // Chessboard Layer
 const tile_size = 32;
-const light_tile_color = 0xffffff; // nice beige: 0xfff4d6; // 0xb5b5b5
-const dark_tile_color = 0x5fcde4;// 0x007013; // the blue I had. 0x5fcde4; // green 0x038a1a
-
+const light_tile_color = 0xffffff; 
+const dark_tile_color = 0x5fcde4;
 const move_dots = {};
 const attack_circles = {}; 
 const highlights = {};
@@ -286,8 +256,6 @@ for (let j=0; j<8; j++) {
     }
 }
 
-
-
 const piece_sprites = {};
 
 async function load_sprites () {
@@ -296,7 +264,6 @@ async function load_sprites () {
     piece_sprites.spritesheet = await PIXI.Assets.load(
         'images/chesspeople_spritesheet.json'
     );
-    // console.log(piece_sprites.spritesheet.textures);
 
     const roster_pointer = engine.get_roster_object();
     Object.keys(roster_pointer).forEach(function (id) {
@@ -317,7 +284,7 @@ load_sprites();
 const register_click_at = function (r, c) {
     // State manager. 
 
-    // Should be called "is there a piece selected"..
+    // Should be called "is there a piece selected".
     if (gui.a_piece_is_selected()) {
         if (
             r === gui.get_selected_piece_coords().r
@@ -335,10 +302,7 @@ const register_click_at = function (r, c) {
                 app.stage.removeChild(piece_sprites[move_to_value]);
             }
             gui.move_piece(move_piece_name, r, c);
-            // socket.emit(
-            //     'piece move', 
-            //     `${move_piece_name} / r: ${r}, c: ${c}`
-            // );
+
         }
     } 
     // Else if there is a piece where you are clicking, and it is of the
@@ -372,13 +336,6 @@ for (let j=0; j<8; j++) {
                 tile_size - (click_border * 2), 
                 tile_size - (click_border * 2)
             ).on("pointerdown", function () {
-                // DEBUG 
-                /*
-                console.log(
-                    "Registered click at: " + String(i) + ", " + String(j)
-                    + " (space " + chess_alpha[j] + String(8-i) + ")"
-                ); 
-                */
                 register_click_at(i, j);
             })
             .endFill();
@@ -386,7 +343,3 @@ for (let j=0; j<8; j++) {
         app.stage.addChild(clickable_square);
     }
 }
-
-// There it is. I have just finished my first ever custom clicable 
-// interface sitting invisibly on top of a high-performance 2D rendering 
-// library. We are officially out of CSS. 
